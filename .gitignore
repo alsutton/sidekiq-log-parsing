@@ -10,3 +10,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Oh the daddy Mac, the Mac daddy
+.DS_Store
