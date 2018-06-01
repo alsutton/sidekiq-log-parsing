@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"fmt"
 	"compress/gzip"
+	"path/filepath"
 )
 
 type timingInformation struct {
@@ -21,14 +22,19 @@ type timingInformation struct {
 func main() {
 	timings := make(map[string]timingInformation)
 
-	csvFile, _ := os.Open("/Users/alsutton/Downloads/2018-05-27-20.tsv.gz")
-	defer csvFile.Close()
+	pathS, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	filepath.Walk(pathS, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() {
+			csvFile, _ := os.Open(f.Name())
+			defer csvFile.Close()
 
-	addTimingsFromFile(csvFile, timings)
-	csvFile2, _ := os.Open("/Users/alsutton/Downloads/2018-05-27-21.tsv.gz")
-	defer csvFile2.Close()
-
-	addTimingsFromFile(csvFile2, timings)
+			addTimingsFromFile(csvFile, timings)
+		}
+		return nil
+	})
 
 	for k,v := range timings {
 		fmt.Printf("%s,%d,%d,%d,%d\n", k, v.count, v.totaltime / v.count, v.maxtime, v.totaltime)
@@ -64,7 +70,7 @@ func addTimingsFromFile(csvFile io.Reader, timings map[string]timingInformation)
 	}
 }
 
-func recordTiming(timings map[string]timingInformation , logLine string) {
+func recordTiming(timings map[string]timingInformation, logLine string) {
 	elements := strings.Split(logLine, " ")
 	timeSpent, _ := strconv.ParseFloat(elements[7], 64)
 	runtime := int64(timeSpent*1000)
